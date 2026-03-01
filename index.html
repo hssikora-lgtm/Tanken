@@ -3,42 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Sprit 2026">
-    <meta name="mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="icon-192.png">
-    <link rel="manifest" href="manifest.json">
-    <title>Sprit-Logbuch 2026</title>
+    <title>Sprit-Monitor Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --excel-green: #217346; --bg: #f4f4f9; --accent: #ffd54f; --danger: #d32f2f; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; padding-top: env(safe-area-inset-top); }
-        .card { max-width: 600px; margin: 0 auto 12px auto; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 15px; }
-        h2 { color: var(--excel-green); text-align: center; margin: 0 0 10px 0; font-size: 1.2em; text-transform: uppercase; }
+        :root { --excel-green: #217346; --bg: #f0f2f5; --accent: #ffd54f; --danger: #d32f2f; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; padding-top: env(safe-area-inset-top); }
+        .card { max-width: 600px; margin: 0 auto 12px auto; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 15px; }
+        h2 { color: var(--excel-green); text-align: center; margin: 0 0 12px 0; font-size: 1.1em; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+        .stat-card { background: #f8f9fa; padding: 10px; border-radius: 8px; text-align: center; border-bottom: 3px solid var(--excel-green); }
+        .stat-label { font-size: 0.65em; color: #666; text-transform: uppercase; margin-bottom: 3px; }
+        .stat-val { font-size: 1em; font-weight: bold; }
+
         .form-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; text-align: center; font-size: 16px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; text-align: center; -webkit-appearance: none; }
         .full { grid-column: span 2; }
-        button { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
         .btn-add { background: var(--excel-green); color: white; margin-top: 5px; }
-        .btn-secondary { background: #eee; color: #444; margin-top: 8px; font-size: 0.8em; padding: 10px; }
-        .btn-delete { background: none; color: var(--danger); border: 1px solid var(--danger); padding: 8px; margin-top: 10px; font-size: 0.75em; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 5px; }
-        .stat-card { background: #fdfdfd; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #eee; }
-        .stat-label { font-size: 0.65em; color: #777; text-transform: uppercase; }
-        .stat-val { font-size: 1.1em; font-weight: bold; color: var(--excel-green); }
-        .table-wrapper { border: 1px solid #ddd; border-radius: 8px; overflow: hidden; margin-top: 10px; }
-        .scroll-area { max-height: 280px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.8em; }
-        th { background: #eee; padding: 10px 2px; border-bottom: 2px solid #ccc; position: sticky; top: 0; z-index: 10; }
-        td { padding: 10px 2px; border-bottom: 1px solid #eee; text-align: center; }
-        .kw-label { background: var(--accent); font-weight: bold; padding: 2px 5px; border-radius: 4px; border: 1px solid #e0c040; }
+        
+        .table-fixed-head { margin-top: 10px; border: 1px solid #eee; border-radius: 8px; overflow: hidden; }
+        /* Hier wird die Sichtbarkeit gesteuert (ca. 4-5 Zeilen) */
+        .table-scroll { max-height: 260px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.82em; }
+        th { background: #efefef; position: sticky; top: 0; padding: 10px; z-index: 1; border-bottom: 2px solid #ddd; }
+        td { padding: 12px 5px; border-bottom: 1px solid #eee; text-align: center; }
+        
+        .kw-badge { background: var(--accent); font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block; border: 1px solid #e0c040; }
+        .chart-container { height: 220px; }
+
+        .util-area { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
+        .btn-util { background: none; border: 1px solid #ccc; color: #666; font-size: 0.75em; padding: 8px; }
+        .footer { text-align: center; font-size: 0.7em; color: #999; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>⛽ NEUER EINTRAG</h2>
+    <h2>⛽ Neuer Eintrag</h2>
     <div class="form-mini">
         <input type="date" id="date" class="full">
         <input type="number" id="km_stand" placeholder="KM Stand" inputmode="numeric">
@@ -48,33 +50,45 @@
     </div>
 </div>
 
-<div class="card stats-grid">
-    <div class="stat-card"><div class="stat-label">Gesamt gefahren</div><div id="total_km" class="stat-val">-</div></div>
-    <div class="stat-card"><div class="stat-label">Kosten 2026</div><div id="costs_2026" class="stat-val" style="color:var(--danger)">-</div></div>
+<div class="card">
+    <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Gesamt km</div><div id="total_km" class="stat-val">-</div></div>
+        <div class="stat-card"><div class="stat-label">Kosten 2026</div><div id="costs_2026" class="stat-val" style="color: var(--danger);">-</div></div>
+        <div class="stat-card"><div class="stat-label">Ø km / Monat</div><div id="avg_month" class="stat-val">-</div></div>
+        <div class="stat-card"><div class="stat-label">Gekauft</div><div class="stat-val">04/2022</div></div>
+    </div>
 </div>
 
-<div class="card" style="height: 200px;"><canvas id="myChart"></canvas></div>
+<div class="card chart-container"><canvas id="myChart"></canvas></div>
 
 <div class="card">
-    <div class="table-wrapper">
+    <div class="table-fixed-head">
         <table>
-            <thead><tr><th style="width:12%">KW</th><th style="width:22%">Datum</th><th style="width:18%">l/100</th><th style="width:16%">Trip</th><th style="width:16%">Gef. km</th><th style="width:16%">€ Ges.</th></tr></thead>
+            <thead>
+                <tr>
+                    <th style="width:15%">kw</th>
+                    <th style="width:25%">Datum</th>
+                    <th style="width:20%">l/100</th>
+                    <th style="width:20%">Trip</th>
+                    <th style="width:20%">Kosten</th>
+                </tr>
+            </thead>
         </table>
-        <div class="scroll-area"><table><tbody id="logBody"></tbody></table></div>
+        <div class="table-scroll"><table><tbody id="logBody"></tbody></table></div>
     </div>
-    
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
-        <button class="btn-secondary" onclick="exportData()">💾 BACKUP DATEI</button>
-        <button class="btn-secondary" onclick="document.getElementById('fileInput').click()">📂 LADEN</button>
-        <input type="file" id="fileInput" style="display:none" onchange="importData(event)">
+    <div class="util-area">
+        <button class="btn-util" onclick="exportData()">💾 BACKUP SICHERN</button>
+        <button class="btn-util" onclick="deleteLastEntry()" style="color:var(--danger); border-color:var(--danger);">🗑️ EINTRAG LÖSCHEN</button>
     </div>
-    
-    <button class="btn-delete full" onclick="deleteLastEntry()">🗑️ LETZTEN EINTRAG LÖSCHEN</button>
 </div>
+
+<div class="footer">by HauniBauni</div>
 
 <script>
     const KM_KAUF = 118138;
-    let entries = JSON.parse(localStorage.getItem('sprit_app_data')) || [
+    const KAUF_DATUM = new Date('2022-04-01');
+
+    let entries = JSON.parse(localStorage.getItem('sprit_final_v2026_top')) || [
         { datum: '2025-12-22', stand: 173698, liter: 61.81, preis: 1.465 },
         { datum: '2026-01-17', stand: 174508, liter: 59.94, preis: 1.439 },
         { datum: '2026-02-07', stand: 175363, liter: 59.36, preis: 1.495 },
@@ -95,31 +109,35 @@
         let labels = [], values = [], totalCosts2026 = 0;
 
         entries.forEach((row, i) => {
-            let basisKm = (i === 0) ? (row.stand - 901) : entries[i-1].stand;
-            let tKm = row.stand - basisKm;
-            let gefKm = row.stand - KM_KAUF;
+            let tKm = (i === 0) ? 901 : row.stand - entries[i-1].stand;
             let verb = (row.liter * 100) / tKm;
             let cost = row.liter * row.preis;
+            
             if(new Date(row.datum).getFullYear() === 2026) totalCosts2026 += cost;
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td style="width:12%"><span class="kw-label">${getKW(row.datum)}</span></td>
-                <td style="width:22%">${new Date(row.datum).toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'})}</td>
-                <td style="width:18%"><b>${fmt(verb, 2)}</b></td>
-                <td style="width:16%">${fmt(tKm, 0)}</td>
-                <td style="width:16%">${fmt(gefKm, 0)}</td>
-                <td style="width:16%">${fmt(cost, 2)}€</td>`;
-            tbody.appendChild(tr);
+                <td style="width:15%"><span class="kw-badge">${getKW(row.datum)}</span></td>
+                <td style="width:25%">${new Date(row.datum).toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'})}</td>
+                <td style="width:20%"><b>${fmt(verb, 2)}</b></td>
+                <td style="width:20%">${fmt(tKm, 0)}</td>
+                <td style="width:20%">${fmt(cost, 2)}€</td>
+            `;
+            tbody.appendChild(tr); // Chronologisch: KW 52 bleibt oben
+
             labels.push("KW " + getKW(row.datum));
             values.push(verb.toFixed(2));
         });
 
         if(entries.length > 0) {
-            document.getElementById('total_km').innerText = fmt(entries[entries.length-1].stand - KM_KAUF) + " km";
+            const lastStand = entries[entries.length-1].stand;
+            document.getElementById('total_km').innerText = fmt(lastStand - KM_KAUF) + " km";
             document.getElementById('costs_2026').innerText = fmt(totalCosts2026, 2) + " €";
+            let monate = (new Date() - KAUF_DATUM) / (1000 * 60 * 60 * 24 * 30.44);
+            document.getElementById('avg_month').innerText = fmt((lastStand - KM_KAUF) / monate) + " km";
         }
-        localStorage.setItem('sprit_app_data', JSON.stringify(entries));
+
+        localStorage.setItem('sprit_final_v2026_top', JSON.stringify(entries));
         renderChart(labels, values);
     }
 
@@ -141,32 +159,14 @@
         update();
     }
 
-    function deleteLastEntry() {
-        if(entries.length > 0 && confirm("Letzten Eintrag wirklich löschen?")) { entries.pop(); update(); }
-    }
-
+    function deleteLastEntry() { if(confirm("Eintrag löschen?")) { entries.pop(); update(); } }
+    
     function exportData() {
-        const dataStr = JSON.stringify(entries, null, 2);
-        const blob = new Blob([dataStr], { type: "text/plain" });
+        const blob = new Blob([JSON.stringify(entries, null, 2)], { type: "text/plain" });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = "sprit_backup_2026.txt";
+        a.download = "sprit_backup.txt";
         a.click();
-    }
-
-    function importData(event) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const imported = JSON.parse(e.target.result);
-                if(Array.isArray(imported)) {
-                    entries = imported;
-                    update();
-                    alert("Backup erfolgreich geladen!");
-                }
-            } catch(err) { alert("Fehler beim Laden der Datei!"); }
-        };
-        reader.readAsText(event.target.files[0]);
     }
 
     document.getElementById('date').valueAsDate = new Date();

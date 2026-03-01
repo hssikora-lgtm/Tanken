@@ -11,36 +11,39 @@
         .card { max-width: 600px; margin: 0 auto 12px auto; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 15px; }
         h2 { color: var(--excel-green); text-align: center; margin: 0 0 12px 0; font-size: 1.1em; text-transform: uppercase; letter-spacing: 1px; }
         
+        /* Stats Dashboard */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
         .stat-card { background: #f8f9fa; padding: 10px; border-radius: 8px; text-align: center; border-bottom: 3px solid var(--excel-green); }
         .stat-label { font-size: 0.65em; color: #666; text-transform: uppercase; margin-bottom: 3px; }
         .stat-val { font-size: 1em; font-weight: bold; }
 
+        /* Eingabe-Bereich */
         .form-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; text-align: center; -webkit-appearance: none; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; text-align: center; -webkit-appearance: none; }
         .full { grid-column: span 2; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .btn-add { background: var(--excel-green); color: white; margin-top: 5px; }
         
+        /* Tabelle mit Scroll-Funktion */
         .table-fixed-head { margin-top: 10px; border: 1px solid #eee; border-radius: 8px; overflow: hidden; }
-        /* Hier wird die Sichtbarkeit gesteuert (ca. 4-5 Zeilen) */
-        .table-scroll { max-height: 260px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.82em; }
-        th { background: #efefef; position: sticky; top: 0; padding: 10px; z-index: 1; border-bottom: 2px solid #ddd; }
+        .table-scroll { max-height: 280px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
+        th { background: #efefef; position: sticky; top: 0; padding: 12px; z-index: 1; border-bottom: 2px solid #ddd; }
         td { padding: 12px 5px; border-bottom: 1px solid #eee; text-align: center; }
         
         .kw-badge { background: var(--accent); font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block; border: 1px solid #e0c040; }
         .chart-container { height: 220px; }
 
+        /* Footer & Tools */
         .util-area { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
         .btn-util { background: none; border: 1px solid #ccc; color: #666; font-size: 0.75em; padding: 8px; }
-        .footer { text-align: center; font-size: 0.7em; color: #999; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .footer { text-align: center; font-size: 0.75em; color: #999; margin-top: 25px; letter-spacing: 0.5px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>⛽ Neuer Eintrag</h2>
+    <h2>⛽ Tank-Daten Erfassen</h2>
     <div class="form-mini">
         <input type="date" id="date" class="full">
         <input type="number" id="km_stand" placeholder="KM Stand" inputmode="numeric">
@@ -59,7 +62,9 @@
     </div>
 </div>
 
-<div class="card chart-container"><canvas id="myChart"></canvas></div>
+<div class="card chart-container">
+    <canvas id="myChart"></canvas>
+</div>
 
 <div class="card">
     <div class="table-fixed-head">
@@ -74,8 +79,11 @@
                 </tr>
             </thead>
         </table>
-        <div class="table-scroll"><table><tbody id="logBody"></tbody></table></div>
+        <div class="table-scroll">
+            <table><tbody id="logBody"></tbody></table>
+        </div>
     </div>
+    
     <div class="util-area">
         <button class="btn-util" onclick="exportData()">💾 BACKUP SICHERN</button>
         <button class="btn-util" onclick="deleteLastEntry()" style="color:var(--danger); border-color:var(--danger);">🗑️ EINTRAG LÖSCHEN</button>
@@ -88,7 +96,8 @@
     const KM_KAUF = 118138;
     const KAUF_DATUM = new Date('2022-04-01');
 
-    let entries = JSON.parse(localStorage.getItem('sprit_final_v2026_top')) || [
+    // Daten-Initialisierung
+    let entries = JSON.parse(localStorage.getItem('sprit_monitor_2026_vfinal')) || [
         { datum: '2025-12-22', stand: 173698, liter: 61.81, preis: 1.465 },
         { datum: '2026-01-17', stand: 174508, liter: 59.94, preis: 1.439 },
         { datum: '2026-02-07', stand: 175363, liter: 59.36, preis: 1.495 },
@@ -96,6 +105,7 @@
     ];
 
     function fmt(n, d=0) { return n.toLocaleString('de-DE', {minimumFractionDigits: d, maximumFractionDigits: d}); }
+    
     function getKW(dStr) {
         let d = new Date(dStr); d.setHours(0,0,0,0);
         d.setDate(d.getDate() + 4 - (d.getDay() || 7));
@@ -103,12 +113,14 @@
     }
 
     function update() {
+        // Intern immer chronologisch sortieren für korrekte Trip-Berechnung
         entries.sort((a,b) => new Date(a.datum) - new Date(b.datum));
         const tbody = document.getElementById('logBody');
         tbody.innerHTML = '';
         let labels = [], values = [], totalCosts2026 = 0;
 
         entries.forEach((row, i) => {
+            // TRIP: KW 52 = 901km laut deiner Excel, sonst Differenz
             let tKm = (i === 0) ? 901 : row.stand - entries[i-1].stand;
             let verb = (row.liter * 100) / tKm;
             let cost = row.liter * row.preis;
@@ -123,7 +135,8 @@
                 <td style="width:20%">${fmt(tKm, 0)}</td>
                 <td style="width:20%">${fmt(cost, 2)}€</td>
             `;
-            tbody.appendChild(tr); // Chronologisch: KW 52 bleibt oben
+            // appendChild: KW 52 (ältester Eintrag) bleibt ganz oben
+            tbody.appendChild(tr);
 
             labels.push("KW " + getKW(row.datum));
             values.push(verb.toFixed(2));
@@ -137,7 +150,7 @@
             document.getElementById('avg_month').innerText = fmt((lastStand - KM_KAUF) / monate) + " km";
         }
 
-        localStorage.setItem('sprit_final_v2026_top', JSON.stringify(entries));
+        localStorage.setItem('sprit_monitor_2026_vfinal', JSON.stringify(entries));
         renderChart(labels, values);
     }
 
@@ -159,16 +172,22 @@
         update();
     }
 
-    function deleteLastEntry() { if(confirm("Eintrag löschen?")) { entries.pop(); update(); } }
+    function deleteLastEntry() { 
+        if(entries.length > 0 && confirm("Soll der letzte Eintrag gelöscht werden?")) { 
+            entries.pop(); 
+            update(); 
+        } 
+    }
     
     function exportData() {
         const blob = new Blob([JSON.stringify(entries, null, 2)], { type: "text/plain" });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = "sprit_backup.txt";
+        a.download = "sprit_backup_2026.txt";
         a.click();
     }
 
+    // Heutiges Datum als Standard setzen
     document.getElementById('date').valueAsDate = new Date();
     update();
 </script>

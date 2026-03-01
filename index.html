@@ -3,15 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Sprit 2026">
     <meta name="mobile-web-app-capable" content="yes">
-
     <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="manifest" href="manifest.json">
-
     <title>Sprit-Logbuch 2026</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -20,55 +17,64 @@
         .card { max-width: 600px; margin: 0 auto 12px auto; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 15px; }
         h2 { color: var(--excel-green); text-align: center; margin: 0 0 10px 0; font-size: 1.2em; text-transform: uppercase; }
         .form-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; text-align: center; font-size: 16px; -webkit-appearance: none; }
-        button { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; background: var(--excel-green); color: white; margin-top: 5px; }
-        .btn-delete { background: none; color: var(--danger); border: 1px solid var(--danger); padding: 8px; margin-top: 10px; font-size: 0.8em; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; text-align: center; font-size: 16px; }
+        .full { grid-column: span 2; }
+        button { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-add { background: var(--excel-green); color: white; margin-top: 5px; }
+        .btn-secondary { background: #eee; color: #444; margin-top: 8px; font-size: 0.8em; padding: 10px; }
+        .btn-delete { background: none; color: var(--danger); border: 1px solid var(--danger); padding: 8px; margin-top: 10px; font-size: 0.75em; }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 5px; }
         .stat-card { background: #fdfdfd; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #eee; }
-        .stat-label { font-size: 0.7em; color: #777; text-transform: uppercase; }
+        .stat-label { font-size: 0.65em; color: #777; text-transform: uppercase; }
         .stat-val { font-size: 1.1em; font-weight: bold; color: var(--excel-green); }
-        .chart-container { height: 210px; }
         .table-wrapper { border: 1px solid #ddd; border-radius: 8px; overflow: hidden; margin-top: 10px; }
         .scroll-area { max-height: 280px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
-        th { background: #eee; padding: 12px 5px; border-bottom: 2px solid #ccc; position: sticky; top: 0; z-index: 10; text-align: center; }
-        td { padding: 12px 5px; border-bottom: 1px solid #eee; text-align: center; }
-        .kw-label { background: var(--accent); font-weight: bold; padding: 3px 8px; border-radius: 4px; border: 1px solid #e0c040; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8em; }
+        th { background: #eee; padding: 10px 2px; border-bottom: 2px solid #ccc; position: sticky; top: 0; z-index: 10; }
+        td { padding: 10px 2px; border-bottom: 1px solid #eee; text-align: center; }
+        .kw-label { background: var(--accent); font-weight: bold; padding: 2px 5px; border-radius: 4px; border: 1px solid #e0c040; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>⛽ Neuer Eintrag</h2>
-        <div class="form-mini">
-            <input type="date" id="date" style="grid-column: span 2;">
-            <input type="number" id="km_stand" placeholder="KM Stand" inputmode="numeric">
-            <input type="number" id="liter" placeholder="Liter" step="0.01" inputmode="decimal">
-            <input type="number" id="preis" placeholder="€ / Liter" step="0.001" style="grid-column: span 2;" inputmode="decimal">
-            <button style="grid-column: span 2;" onclick="addEntry()">DATEN SPEICHERN</button>
-        </div>
-    </div>
 
-    <div class="card stats-grid">
-        <div class="stat-card"><div class="stat-label">Gesamt km</div><div id="total_km" class="stat-val">-</div></div>
-        <div class="stat-card"><div class="stat-label">Kosten 2026</div><div id="costs_2026" class="stat-val" style="color: var(--danger);">-</div></div>
+<div class="card">
+    <h2>⛽ NEUER EINTRAG</h2>
+    <div class="form-mini">
+        <input type="date" id="date" class="full">
+        <input type="number" id="km_stand" placeholder="KM Stand" inputmode="numeric">
+        <input type="number" id="liter" placeholder="Liter" step="0.01" inputmode="decimal">
+        <input type="number" id="preis" placeholder="€ / Liter" step="0.001" class="full" inputmode="decimal">
+        <button class="btn-add full" onclick="addEntry()">DATEN SPEICHERN</button>
     </div>
+</div>
 
-    <div class="card chart-container"><canvas id="myChart"></canvas></div>
+<div class="card stats-grid">
+    <div class="stat-card"><div class="stat-label">Gesamt gefahren</div><div id="total_km" class="stat-val">-</div></div>
+    <div class="stat-card"><div class="stat-label">Kosten 2026</div><div id="costs_2026" class="stat-val" style="color:var(--danger)">-</div></div>
+</div>
 
-    <div class="card">
-        <div class="table-wrapper">
-            <table>
-                <thead><tr><th style="width:15%">KW</th><th style="width:25%">Datum</th><th style="width:20%">l/100</th><th style="width:20%">Trip</th><th style="width:20%">€ Ges.</th></tr></thead>
-            </table>
-            <div class="scroll-area"><table><tbody id="logBody"></tbody></table></div>
-        </div>
-        <button style="background:none; border: 1px solid #ddd; color:#666; border-radius: 6px; font-size:0.75em; width:100%; margin-top:10px; padding: 8px;" onclick="copyForExcel()">📋 Letzte Zeile für Excel kopieren</button>
-        <button class="btn-delete" onclick="deleteLastEntry()">🗑️ Letzten Eintrag löschen</button>
+<div class="card" style="height: 200px;"><canvas id="myChart"></canvas></div>
+
+<div class="card">
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th style="width:12%">KW</th><th style="width:22%">Datum</th><th style="width:18%">l/100</th><th style="width:16%">Trip</th><th style="width:16%">Gef. km</th><th style="width:16%">€ Ges.</th></tr></thead>
+        </table>
+        <div class="scroll-area"><table><tbody id="logBody"></tbody></table></div>
     </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+        <button class="btn-secondary" onclick="exportData()">💾 BACKUP DATEI</button>
+        <button class="btn-secondary" onclick="document.getElementById('fileInput').click()">📂 LADEN</button>
+        <input type="file" id="fileInput" style="display:none" onchange="importData(event)">
+    </div>
+    
+    <button class="btn-delete full" onclick="deleteLastEntry()">🗑️ LETZTEN EINTRAG LÖSCHEN</button>
+</div>
 
 <script>
     const KM_KAUF = 118138;
-    let entries = JSON.parse(localStorage.getItem('car_data_v12')) || [
+    let entries = JSON.parse(localStorage.getItem('sprit_app_data')) || [
         { datum: '2025-12-22', stand: 173698, liter: 61.81, preis: 1.465 },
         { datum: '2026-01-17', stand: 174508, liter: 59.94, preis: 1.439 },
         { datum: '2026-02-07', stand: 175363, liter: 59.36, preis: 1.495 },
@@ -87,17 +93,23 @@
         const tbody = document.getElementById('logBody');
         tbody.innerHTML = '';
         let labels = [], values = [], totalCosts2026 = 0;
-        
+
         entries.forEach((row, i) => {
-            // Trip-Berechnung: Erster Eintrag nutzt 901km Differenz laut Screenshot
             let basisKm = (i === 0) ? (row.stand - 901) : entries[i-1].stand;
             let tKm = row.stand - basisKm;
+            let gefKm = row.stand - KM_KAUF;
             let verb = (row.liter * 100) / tKm;
             let cost = row.liter * row.preis;
             if(new Date(row.datum).getFullYear() === 2026) totalCosts2026 += cost;
 
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td style="width:15%"><span class="kw-label">${getKW(row.datum)}</span></td><td>${new Date(row.datum).toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit', year:'2-digit'})}</td><td><b>${fmt(verb, 2)}</b></td><td>${fmt(tKm, 0)}</td><td>${fmt(cost, 2)}€</td>`;
+            tr.innerHTML = `
+                <td style="width:12%"><span class="kw-label">${getKW(row.datum)}</span></td>
+                <td style="width:22%">${new Date(row.datum).toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'})}</td>
+                <td style="width:18%"><b>${fmt(verb, 2)}</b></td>
+                <td style="width:16%">${fmt(tKm, 0)}</td>
+                <td style="width:16%">${fmt(gefKm, 0)}</td>
+                <td style="width:16%">${fmt(cost, 2)}€</td>`;
             tbody.appendChild(tr);
             labels.push("KW " + getKW(row.datum));
             values.push(verb.toFixed(2));
@@ -107,7 +119,7 @@
             document.getElementById('total_km').innerText = fmt(entries[entries.length-1].stand - KM_KAUF) + " km";
             document.getElementById('costs_2026').innerText = fmt(totalCosts2026, 2) + " €";
         }
-        localStorage.setItem('car_data_v12', JSON.stringify(entries));
+        localStorage.setItem('sprit_app_data', JSON.stringify(entries));
         renderChart(labels, values);
     }
 
@@ -124,28 +136,39 @@
 
     function addEntry() {
         const d = document.getElementById('date').value, s = parseFloat(document.getElementById('km_stand').value), l = parseFloat(document.getElementById('liter').value), p = parseFloat(document.getElementById('preis').value);
-        if(!d || !s || !l || !p) return alert("Bitte alle Felder füllen!");
+        if(!d || !s || !l || !p) return alert("Bitte alle Felder ausfüllen!");
         entries.push({ datum: d, stand: s, liter: l, preis: p });
         update();
     }
 
     function deleteLastEntry() {
-        if(entries.length === 0) return;
-        if(confirm("Letzten Eintrag wirklich löschen?")) {
-            entries.pop();
-            update();
-        }
+        if(entries.length > 0 && confirm("Letzten Eintrag wirklich löschen?")) { entries.pop(); update(); }
     }
 
-    function copyForExcel() {
-        if(entries.length === 0) return;
-        const last = entries[entries.length - 1];
-        const prev = entries[entries.length - 2] || {stand: last.stand - 901};
-        const tKm = last.stand - prev.stand;
-        const str = `${getKW(last.datum)}\t${new Date(last.datum).toLocaleDateString('de-DE')}\t${last.stand}\t${last.liter}\t${last.preis}\t${(last.liter*last.preis).toFixed(2)}\t${((last.liter*100)/tKm).toFixed(2)}\t${last.stand-KM_KAUF}\t${tKm}`;
-        navigator.clipboard.writeText(str.replace(/\./g, ','));
-        alert("Kopiert!");
+    function exportData() {
+        const dataStr = JSON.stringify(entries, null, 2);
+        const blob = new Blob([dataStr], { type: "text/plain" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "sprit_backup_2026.txt";
+        a.click();
     }
+
+    function importData(event) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const imported = JSON.parse(e.target.result);
+                if(Array.isArray(imported)) {
+                    entries = imported;
+                    update();
+                    alert("Backup erfolgreich geladen!");
+                }
+            } catch(err) { alert("Fehler beim Laden der Datei!"); }
+        };
+        reader.readAsText(event.target.files[0]);
+    }
+
     document.getElementById('date').valueAsDate = new Date();
     update();
 </script>

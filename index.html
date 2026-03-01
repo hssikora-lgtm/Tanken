@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#217346">
+    <link rel="manifest" href="manifest.json">
     <title>Sprit-Monitor Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -10,39 +12,32 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; padding-top: env(safe-area-inset-top); }
         .card { max-width: 600px; margin: 0 auto 12px auto; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 15px; }
         h2 { color: var(--excel-green); text-align: center; margin: 0 0 12px 0; font-size: 1.1em; text-transform: uppercase; letter-spacing: 1px; }
-        
-        /* Stats Dashboard */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
         .stat-card { background: #f8f9fa; padding: 10px; border-radius: 8px; text-align: center; border-bottom: 3px solid var(--excel-green); }
         .stat-label { font-size: 0.65em; color: #666; text-transform: uppercase; margin-bottom: 3px; }
         .stat-val { font-size: 1em; font-weight: bold; }
-
-        /* Eingabe-Bereich */
         .form-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; text-align: center; -webkit-appearance: none; }
         .full { grid-column: span 2; }
         button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .btn-add { background: var(--excel-green); color: white; margin-top: 5px; }
-        
-        /* Tabelle mit Scroll-Funktion */
         .table-fixed-head { margin-top: 10px; border: 1px solid #eee; border-radius: 8px; overflow: hidden; }
         .table-scroll { max-height: 280px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
         th { background: #efefef; position: sticky; top: 0; padding: 12px; z-index: 1; border-bottom: 2px solid #ddd; }
         td { padding: 12px 5px; border-bottom: 1px solid #eee; text-align: center; }
-        
         .kw-badge { background: var(--accent); font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block; border: 1px solid #e0c040; }
         .chart-container { height: 220px; }
-
-        /* Footer & Tools */
         .util-area { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
         .btn-util { background: none; border: 1px solid #ccc; color: #666; font-size: 0.75em; padding: 8px; }
         .footer { text-align: center; font-size: 0.75em; color: #999; margin-top: 25px; letter-spacing: 0.5px; }
+        #installBtn { display: none; background: #333; color: white; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
 <div class="card">
+    <button id="installBtn" class="full" onclick="installApp()">📲 App Installieren</button>
     <h2>⛽ Tank-Daten Erfassen</h2>
     <div class="form-mini">
         <input type="date" id="date" class="full">
@@ -62,28 +57,17 @@
     </div>
 </div>
 
-<div class="card chart-container">
-    <canvas id="myChart"></canvas>
-</div>
+<div class="card chart-container"><canvas id="myChart"></canvas></div>
 
 <div class="card">
     <div class="table-fixed-head">
         <table>
             <thead>
-                <tr>
-                    <th style="width:15%">kw</th>
-                    <th style="width:25%">Datum</th>
-                    <th style="width:20%">l/100</th>
-                    <th style="width:20%">Trip</th>
-                    <th style="width:20%">Kosten</th>
-                </tr>
+                <tr><th style="width:15%">kw</th><th style="width:25%">Datum</th><th style="width:20%">l/100</th><th style="width:20%">Trip</th><th style="width:20%">Kosten</th></tr>
             </thead>
         </table>
-        <div class="table-scroll">
-            <table><tbody id="logBody"></tbody></table>
-        </div>
+        <div class="table-scroll"><table><tbody id="logBody"></tbody></table></div>
     </div>
-    
     <div class="util-area">
         <button class="btn-util" onclick="exportData()">💾 BACKUP SICHERN</button>
         <button class="btn-util" onclick="deleteLastEntry()" style="color:var(--danger); border-color:var(--danger);">🗑️ EINTRAG LÖSCHEN</button>
@@ -95,9 +79,7 @@
 <script>
     const KM_KAUF = 118138;
     const KAUF_DATUM = new Date('2022-04-01');
-
-    // Daten-Initialisierung
-    let entries = JSON.parse(localStorage.getItem('sprit_monitor_2026_vfinal')) || [
+    let entries = JSON.parse(localStorage.getItem('sprit_monitor_pwa_v1')) || [
         { datum: '2025-12-22', stand: 173698, liter: 61.81, preis: 1.465 },
         { datum: '2026-01-17', stand: 174508, liter: 59.94, preis: 1.439 },
         { datum: '2026-02-07', stand: 175363, liter: 59.36, preis: 1.495 },
@@ -105,7 +87,6 @@
     ];
 
     function fmt(n, d=0) { return n.toLocaleString('de-DE', {minimumFractionDigits: d, maximumFractionDigits: d}); }
-    
     function getKW(dStr) {
         let d = new Date(dStr); d.setHours(0,0,0,0);
         d.setDate(d.getDate() + 4 - (d.getDay() || 7));
@@ -113,31 +94,19 @@
     }
 
     function update() {
-        // Intern immer chronologisch sortieren für korrekte Trip-Berechnung
         entries.sort((a,b) => new Date(a.datum) - new Date(b.datum));
         const tbody = document.getElementById('logBody');
         tbody.innerHTML = '';
         let labels = [], values = [], totalCosts2026 = 0;
 
         entries.forEach((row, i) => {
-            // TRIP: KW 52 = 901km laut deiner Excel, sonst Differenz
             let tKm = (i === 0) ? 901 : row.stand - entries[i-1].stand;
             let verb = (row.liter * 100) / tKm;
             let cost = row.liter * row.preis;
-            
             if(new Date(row.datum).getFullYear() === 2026) totalCosts2026 += cost;
-
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td style="width:15%"><span class="kw-badge">${getKW(row.datum)}</span></td>
-                <td style="width:25%">${new Date(row.datum).toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'})}</td>
-                <td style="width:20%"><b>${fmt(verb, 2)}</b></td>
-                <td style="width:20%">${fmt(tKm, 0)}</td>
-                <td style="width:20%">${fmt(cost, 2)}€</td>
-            `;
-            // appendChild: KW 52 (ältester Eintrag) bleibt ganz oben
+            tr.innerHTML = `<td><span class="kw-badge">${getKW(row.datum)}</span></td><td>${new Date(row.datum).toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'})}</td><td><b>${fmt(verb, 2)}</b></td><td>${fmt(tKm, 0)}</td><td>${fmt(cost, 2)}€</td>`;
             tbody.appendChild(tr);
-
             labels.push("KW " + getKW(row.datum));
             values.push(verb.toFixed(2));
         });
@@ -149,8 +118,7 @@
             let monate = (new Date() - KAUF_DATUM) / (1000 * 60 * 60 * 24 * 30.44);
             document.getElementById('avg_month').innerText = fmt((lastStand - KM_KAUF) / monate) + " km";
         }
-
-        localStorage.setItem('sprit_monitor_2026_vfinal', JSON.stringify(entries));
+        localStorage.setItem('sprit_monitor_pwa_v1', JSON.stringify(entries));
         renderChart(labels, values);
     }
 
@@ -167,27 +135,40 @@
 
     function addEntry() {
         const d = document.getElementById('date').value, s = parseFloat(document.getElementById('km_stand').value), l = parseFloat(document.getElementById('liter').value), p = parseFloat(document.getElementById('preis').value);
-        if(!d || !s || !l || !p) return alert("Bitte alle Felder ausfüllen!");
+        if(!d || !s || !l || !p) return alert("Felder prüfen!");
         entries.push({ datum: d, stand: s, liter: l, preis: p });
         update();
     }
 
-    function deleteLastEntry() { 
-        if(entries.length > 0 && confirm("Soll der letzte Eintrag gelöscht werden?")) { 
-            entries.pop(); 
-            update(); 
-        } 
-    }
-    
+    function deleteLastEntry() { if(confirm("Löschen?")) { entries.pop(); update(); } }
     function exportData() {
         const blob = new Blob([JSON.stringify(entries, null, 2)], { type: "text/plain" });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = "sprit_backup_2026.txt";
-        a.click();
+        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "sprit_backup.txt"; a.click();
     }
 
-    // Heutiges Datum als Standard setzen
+    // PWA Logik
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('installBtn').style.display = 'block';
+    });
+
+    async function installApp() {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                document.getElementById('installBtn').style.display = 'none';
+            }
+            deferredPrompt = null;
+        }
+    }
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+    }
+
     document.getElementById('date').valueAsDate = new Date();
     update();
 </script>

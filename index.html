@@ -7,22 +7,22 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Sprit 2026">
-    
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%23217346%22/><path d=%22M30 30h30v40H30z%22 fill=%22white%22/><path d=%22M60 40h10v15H60z%22 fill=%22%23ffd54f%22/><circle cx=%2245%22 cy=%2245%22 r=%225%22 fill=%22%23217346%22/></svg>">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%23217346%22/><path d=%22M30 30h30v40H30z%22 fill=%22white%22/><path d=%22M60 40h10v15H60z%22 fill=%22%23ffd54f%22/><circle cx=%2245%22 cy=%2245%22 r=%225%22 fill=%22%23217346%22/></svg>">
+    <meta name="mobile-web-app-capable" content="yes">
 
-    <link rel="manifest" href='data:application/json,{"name":"Sprit Logbuch 2026","short_name":"Sprit 2026","display":"standalone","start_url":".","background_color":"#f4f4f9","theme_color":"#217346"}'>
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="manifest" href="manifest.json">
 
     <title>Sprit-Logbuch 2026</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --excel-green: #217346; --bg: #f4f4f9; --accent: #ffd54f; }
+        :root { --excel-green: #217346; --bg: #f4f4f9; --accent: #ffd54f; --danger: #d32f2f; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; padding-top: env(safe-area-inset-top); }
         .card { max-width: 600px; margin: 0 auto 12px auto; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 15px; }
         h2 { color: var(--excel-green); text-align: center; margin: 0 0 10px 0; font-size: 1.2em; text-transform: uppercase; }
         .form-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; text-align: center; font-size: 16px; }
-        button { width: 100%; padding: 14px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; background: var(--excel-green); color: white; margin-top: 5px; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; text-align: center; font-size: 16px; -webkit-appearance: none; }
+        button { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; background: var(--excel-green); color: white; margin-top: 5px; }
+        .btn-delete { background: none; color: var(--danger); border: 1px solid var(--danger); padding: 8px; margin-top: 10px; font-size: 0.8em; }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 5px; }
         .stat-card { background: #fdfdfd; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #eee; }
         .stat-label { font-size: 0.7em; color: #777; text-transform: uppercase; }
@@ -50,7 +50,7 @@
 
     <div class="card stats-grid">
         <div class="stat-card"><div class="stat-label">Gesamt km</div><div id="total_km" class="stat-val">-</div></div>
-        <div class="stat-card"><div class="stat-label">Kosten 2026</div><div id="costs_2026" class="stat-val" style="color: #d32f2f;">-</div></div>
+        <div class="stat-card"><div class="stat-label">Kosten 2026</div><div id="costs_2026" class="stat-val" style="color: var(--danger);">-</div></div>
     </div>
 
     <div class="card chart-container"><canvas id="myChart"></canvas></div>
@@ -63,12 +63,13 @@
             <div class="scroll-area"><table><tbody id="logBody"></tbody></table></div>
         </div>
         <button style="background:none; border: 1px solid #ddd; color:#666; border-radius: 6px; font-size:0.75em; width:100%; margin-top:10px; padding: 8px;" onclick="copyForExcel()">📋 Letzte Zeile für Excel kopieren</button>
+        <button class="btn-delete" onclick="deleteLastEntry()">🗑️ Letzten Eintrag löschen</button>
     </div>
 
 <script>
     const KM_KAUF = 118138;
-    let entries = JSON.parse(localStorage.getItem('car_data_v11')) || [
-        { datum: '2025-12-22', stand: 173698, liter: 38.10, preis: 1.465 },
+    let entries = JSON.parse(localStorage.getItem('car_data_v12')) || [
+        { datum: '2025-12-22', stand: 173698, liter: 61.81, preis: 1.465 },
         { datum: '2026-01-17', stand: 174508, liter: 59.94, preis: 1.439 },
         { datum: '2026-02-07', stand: 175363, liter: 59.36, preis: 1.495 },
         { datum: '2026-03-01', stand: 176233, liter: 60.71, preis: 1.535 }
@@ -86,22 +87,27 @@
         const tbody = document.getElementById('logBody');
         tbody.innerHTML = '';
         let labels = [], values = [], totalCosts2026 = 0;
+        
         entries.forEach((row, i) => {
-            let basisKm = (i === 0) ? (row.stand - 555.6) : entries[i-1].stand;
+            // Trip-Berechnung: Erster Eintrag nutzt 901km Differenz laut Screenshot
+            let basisKm = (i === 0) ? (row.stand - 901) : entries[i-1].stand;
             let tKm = row.stand - basisKm;
             let verb = (row.liter * 100) / tKm;
             let cost = row.liter * row.preis;
             if(new Date(row.datum).getFullYear() === 2026) totalCosts2026 += cost;
+
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td style="width:15%"><span class="kw-label">${getKW(row.datum)}</span></td><td style="width:25%">${new Date(row.datum).toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit', year:'2-digit'})}</td><td style="width:20%"><b>${fmt(verb, 2)}</b></td><td style="width:20%">${fmt(tKm, 0)}</td><td style="width:20%">${fmt(cost, 2)}€</td>`;
+            tr.innerHTML = `<td style="width:15%"><span class="kw-label">${getKW(row.datum)}</span></td><td>${new Date(row.datum).toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit', year:'2-digit'})}</td><td><b>${fmt(verb, 2)}</b></td><td>${fmt(tKm, 0)}</td><td>${fmt(cost, 2)}€</td>`;
             tbody.appendChild(tr);
             labels.push("KW " + getKW(row.datum));
             values.push(verb.toFixed(2));
         });
-        const lastStand = entries[entries.length-1].stand;
-        document.getElementById('total_km').innerText = fmt(lastStand - KM_KAUF) + " km";
-        document.getElementById('costs_2026').innerText = fmt(totalCosts2026, 2) + " €";
-        localStorage.setItem('car_data_v11', JSON.stringify(entries));
+
+        if(entries.length > 0) {
+            document.getElementById('total_km').innerText = fmt(entries[entries.length-1].stand - KM_KAUF) + " km";
+            document.getElementById('costs_2026').innerText = fmt(totalCosts2026, 2) + " €";
+        }
+        localStorage.setItem('car_data_v12', JSON.stringify(entries));
         renderChart(labels, values);
     }
 
@@ -112,27 +118,34 @@
         chart = new Chart(ctx, {
             type: 'line',
             data: { labels: l, datasets: [{ data: d, borderColor: '#217346', tension: 0.3, fill: true, backgroundColor: 'rgba(33, 115, 70, 0.1)' }]},
-            options: { maintainAspectRatio: false, plugins: { legend: {display: false} }, scales: { y: { title: { display: true, text: 'l/100km' } } } }
+            options: { maintainAspectRatio: false, plugins: { legend: {display: false} } }
         });
     }
 
     function addEntry() {
         const d = document.getElementById('date').value, s = parseFloat(document.getElementById('km_stand').value), l = parseFloat(document.getElementById('liter').value), p = parseFloat(document.getElementById('preis').value);
-        if(!d || !s || !l || !p) return alert("Bitte Felder füllen!");
+        if(!d || !s || !l || !p) return alert("Bitte alle Felder füllen!");
         entries.push({ datum: d, stand: s, liter: l, preis: p });
         update();
     }
 
+    function deleteLastEntry() {
+        if(entries.length === 0) return;
+        if(confirm("Letzten Eintrag wirklich löschen?")) {
+            entries.pop();
+            update();
+        }
+    }
+
     function copyForExcel() {
+        if(entries.length === 0) return;
         const last = entries[entries.length - 1];
-        const prev = entries[entries.length - 2] || {stand: last.stand - 500};
+        const prev = entries[entries.length - 2] || {stand: last.stand - 901};
         const tKm = last.stand - prev.stand;
-        const verb = (last.liter * 100) / tKm;
-        const str = `${getKW(last.datum)}\t${new Date(last.datum).toLocaleDateString('de-DE')}\t${last.stand}\t${last.liter}\t${last.preis}\t${(last.liter*last.preis).toFixed(2)}\t${verb.toFixed(2)}\t${last.stand-KM_KAUF}\t${tKm}`;
+        const str = `${getKW(last.datum)}\t${new Date(last.datum).toLocaleDateString('de-DE')}\t${last.stand}\t${last.liter}\t${last.preis}\t${(last.liter*last.preis).toFixed(2)}\t${((last.liter*100)/tKm).toFixed(2)}\t${last.stand-KM_KAUF}\t${tKm}`;
         navigator.clipboard.writeText(str.replace(/\./g, ','));
         alert("Kopiert!");
     }
-
     document.getElementById('date').valueAsDate = new Date();
     update();
 </script>
